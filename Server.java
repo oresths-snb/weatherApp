@@ -1,15 +1,31 @@
+import java.io.*;
 import java.net.*;
+import java.util.Properties;
 
 public class Server {
     private static int port;
     private static final String SERVER_ADDR = "localhost";
+    private static String apiKey;
+
+    Server() {
+    }
 
     public static void main(String[] args) {
+        // Check for correct usage
         if (args.length > 0) {
             port = Integer.parseInt(args[0]);
         } else{
             System.out.println("Usage: java Server <port>");
             return;
+        }
+
+        // Load API key
+        Properties properties = new Properties();
+        try (InputStream input = new FileInputStream("config")) {
+            properties.load(input);
+            apiKey = properties.getProperty("api.key");
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
 
         // Server Start
@@ -20,10 +36,8 @@ public class Server {
                 Socket socket = serverSocket.accept();
                 System.out.println("Client connected");
 
-                socket.close();
-                System.out.println("Client disconnected");
-
-               
+                ServerThread serverThread = new ServerThread(socket, port, apiKey);
+                serverThread.start();
             }
         } catch (Exception ex) {
             ex.printStackTrace();
