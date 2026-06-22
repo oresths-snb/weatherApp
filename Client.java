@@ -1,68 +1,122 @@
 import java.net.*;
-import java.util.Scanner;
+import java.util.Properties;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import java.io.*;
 
 public class Client {
-    BufferedReader in;
-    PrintWriter out;
-    Scanner scanner;
-    private Socket socket;
-    String serverAddress = "localhost";
-    int port = 12345;
-    
-    public void connectToServer(String serverAddress, int port) {
-        try{
-            socket = new Socket(serverAddress, port);
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out = new PrintWriter(socket.getOutputStream(), true);
+ private static String apiKey;
 
-            System.out.println("Connected to server at " + serverAddress + ":" + port);
-            
+    public Client() {
+        // Load API key
+        Properties properties = new Properties();
+        try (InputStream input = new FileInputStream("config")) {
+            properties.load(input);
+            apiKey = properties.getProperty("api.key");
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
-    public void disconnectFromServer(Socket socket) {
+    public static void main(String[] args) {
+        Client client = new Client();
+        String resp = client.getWeatherByCity("London", "metric", false);
+        System.out.println(resp);
+        resp = client.getWeatherByCoords("51.5074", "-0.1278", "metric", false);
+        System.out.println("\n\n" + resp);
+    }
+
+    public String getWeatherByCity(String city, String unit, Boolean isAlert) {
         try {
-            if (socket != null && !socket.isClosed()) {
-                out.println("exit");
-                socket.close();
-                System.out.println("Disconnected from server");
+            String apiURI = "https://api.openweathermap.org/data/2.5/weather?q="+city+"&appid="+apiKey+"&units="+unit;
+            URI uri = new URI(apiURI);
+            HttpURLConnection urlConnection = (HttpURLConnection) uri.toURL().openConnection();
+            InputStream inp = urlConnection.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inp));
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+            urlConnection.disconnect();
+
+            return response.toString();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    public String getWeatherByCoords(String lat, String lon, String unit, Boolean isAlert) {
+        try {
+            String apiURI = "https://api.openweathermap.org/data/2.5/weather?lat="+lat+"&lon="+lon+"&appid="+apiKey+"&units="+unit;
+            URI uri = new URI(apiURI);
+            HttpURLConnection urlConnection = (HttpURLConnection) uri.toURL().openConnection();
+            InputStream inp = urlConnection.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inp));
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+            urlConnection.disconnect();
+
+            return response.toString();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    /*public void getAlerts(String msg){
+        String response = null;
+        try {
+             if (msg.startsWith("CITY:")) {
+                String city = msg.substring(5);
+                response = getWeatherByCity(city, "metric",true);
+            } else if (msg.startsWith("COORDINATES:")){
+                String[] coords = msg.substring(12).split(",");
+                response = getWeatherByCoords(coords[0], coords[1], "metric",true);
+            }
+            if (response != null) {
+                JsonObject json = JsonParser.parseString(response).getAsJsonObject();
+                double temp = json.getAsJsonObject("main").get("temp").getAsDouble();
+                String description = json.getAsJsonArray("weather").get(0).getAsJsonObject().get("description").getAsString();
+                double windSpeed = json.getAsJsonObject("wind").get("speed").getAsDouble();
+
+                if (temp > 30) {
+                    out.println("ALERT: High temperature!");
+                } else if (temp < 10) {
+                    out.println("ALERT: Low temperature!");
+                }
+
+                if (description.toLowerCase().contains("thunderstorm")) {
+                    out.println("ALERT: Thunderstorm!");
+                } else if (description.toLowerCase().contains("rain")) {
+                    out.println("ALERT: Rain!");
+                }
+
+                if (windSpeed > 20) {
+                    out.println("ALERT: High wind speed!");
+                }
+
+                if (temp <= 30 && temp >= 10 && !description.toLowerCase().contains("thunderstorm") && !description.toLowerCase().contains("rain") && windSpeed <= 20)
+                    out.println("No alerts");
+
+                out.println("");
+                out.flush();
+            } else{
+                out.println("No weather data available");
+                out.println("");
+                out.flush();
             }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-    }
-
-    public void getWeatherByCity(String city){
-        try {
-            String toSend = "CITY:" + city;
-            out.println(toSend);
-            out.flush();
-            String response = in.readLine();
-            while (!response.isEmpty()){
-                System.out.println(response);
-                response = in.readLine();
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    public void getWeatherByCoords(String lat, String lon){
-        try {
-            String toSend = "COORDINATES:" + lat + "," + lon;
-            out.println(toSend);
-            out.flush();
-            String response = in.readLine();
-            while (!response.isEmpty()){
-                System.out.println(response);
-                response = in.readLine();
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
+    }*/
 
 }
