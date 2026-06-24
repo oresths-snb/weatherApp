@@ -8,6 +8,17 @@
     android:visibility="visible"
     tools:context=".MainActivity">
 
+    <ImageView
+        android:id="@+id/ivBackground"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/sky_day"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <EditText
         android:id="@+id/etCity"
         android:layout_width="wrap_content"
@@ -15,6 +26,7 @@
         android:layout_marginTop="40dp"
         android:ems="10"
         android:inputType="text"
+        android:textColor="@color/purple"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
@@ -24,9 +36,9 @@
         android:id="@+id/btnSrch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
-        android:layout_marginTop="40dp"
-        android:text="Button"
+        android:layout_marginStart="240dp"
+        android:layout_marginTop="44dp"
+        android:text="Search City"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/etCity" />
 
@@ -34,8 +46,9 @@
         android:id="@+id/btnLoc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="30dp"
-        android:text="Button"
+        android:layout_marginTop="432dp"
+        android:layout_marginEnd="24dp"
+        android:text="Send Location"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/btnSrch" />
 
@@ -53,10 +66,11 @@
         android:id="@+id/tvCityName"
         android:layout_width="95dp"
         android:layout_height="35dp"
-        android:layout_marginTop="36dp"
-        android:text="TextView"
+        android:layout_marginTop="8dp"
+        android:text="CityName"
+        android:textColor="@color/purple"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_bias="0.113"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/pbLoad" />
 
@@ -64,10 +78,11 @@
         android:id="@+id/tvTemp"
         android:layout_width="95dp"
         android:layout_height="35dp"
-        android:layout_marginTop="24dp"
-        android:text="TextView"
+        android:layout_marginTop="40dp"
+        android:text="Temperature"
+        android:textColor="@color/purple"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_bias="0.113"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvCityName" />
 
@@ -75,9 +90,11 @@
         android:id="@+id/tvDescr"
         android:layout_width="95dp"
         android:layout_height="35dp"
-        android:layout_marginTop="20dp"
-        android:text="TextView"
+        android:layout_marginTop="32dp"
+        android:text="Weather descr"
+        android:textColor="@color/purple"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.113"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvTemp" />
 
@@ -85,9 +102,11 @@
         android:id="@+id/tvAlerts"
         android:layout_width="95dp"
         android:layout_height="35dp"
-        android:layout_marginTop="24dp"
-        android:text="TextView"
+        android:layout_marginTop="40dp"
+        android:text="Alert!"
+        android:textColor="@color/purple"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.113"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvDescr" />
 
