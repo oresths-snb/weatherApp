@@ -10,6 +10,7 @@ import androidx.core.app.ActivityCompat;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -106,14 +107,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         tvFeels.setText("Feels Like:\n"+data.getFeelsLike());
                         tvWind.setText("Wind Speed:\n"+data.getWindSpeed());
                     } else{
-                        Toast.makeText(this, "Please enter a city name", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Error fetching data!", Toast.LENGTH_SHORT).show();
                     }
                 });
             }).start();
         }
 
         if (v == btnLoc)
-            UseCurrentLocation();
+
+            pbLoad.setVisibility(View.VISIBLE);
+
+        new Thread(() -> {
+            SearchByLocation();
+
+            runOnUiThread(() -> {
+                pbLoad.setVisibility(View.GONE);
+                if (data != null){
+                    tvCityName.setText("City:\n"+data.getCity());
+                    tvTemp.setText("Temperature:\n"+data.getTemperature());
+                    tvFeels.setText("Feels Like:\n"+data.getFeelsLike());
+                    tvWind.setText("Wind Speed:\n"+data.getWindSpeed());
+                } else{
+                    Toast.makeText(this, "Error fetching data!", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }).start();
+
     }
 
     private void SearchByCity(final String city) {
@@ -122,18 +141,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         data = client.getWeatherByCity(city,"metric");
     }
 
-    private void UseCurrentLocation() {
-       /* if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
+    private void SearchByLocation() {
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
             return;
         }
+        LocationManager LocMan = (LocationManager) getSystemService (Context.LOCATION_SERVICE);
+        Criteria criteria = new Criteria();
+        criteria.setAccuracy(Criteria.ACCURACY_FINE);
 
-        pbLoad.setVisibility(View.VISIBLE);
-        LocMan.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3000, 2.5f, this); */
+        String provider = LocMan.getBestProvider(criteria,true);
+
+        if (provider != null){
+            Location location = LocMan.getLastKnownLocation(provider);
+
+            if (location != null){
+                String lat = location.getLatitude() + "";
+                String lon = location.getLongitude() + "";
+
+                Client client = new Client();
+                data = client.getWeatherByCoords(lat,lon,"metric");
+            } else{
+                Toast.makeText(this, "Error fetching data!", Toast.LENGTH_SHORT).show();
+            }
+
+        }
     }
 
-    private void SetBackgroundByTimeOfDay() {
+         private void SetBackgroundByTimeOfDay() {
         Calendar calendar = Calendar.getInstance();
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
 

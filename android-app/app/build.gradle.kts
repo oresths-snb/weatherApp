@@ -55,4 +55,5 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation(libs.gson)
+    implementation("com.google.android.gms:play-services:7.0.0")
 }
