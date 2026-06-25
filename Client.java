@@ -7,7 +7,7 @@ import com.google.gson.JsonParser;
 import java.io.*;
 
 public class Client {
- private static String apiKey;
+ private static String apiKey="33839cf3295f1e6a672de4f285ef72c1"; // ΤΙΓΚΑ λαθος υπό άλλες συνθήκες δεν το κάνουμε ούτε για αστείο.
 
     public Client() {
         // Load API key
@@ -22,7 +22,7 @@ public class Client {
 
     public static void main(String[] args) {
         Client client = new Client();
-        String resp = client.getWeatherByCity("London", "metric", false);
+        String resp = client.getWeatherByCity("Athens", "metric", false);
         System.out.println(resp);
         resp = client.getWeatherByCoords("51.5074", "-0.1278", "metric", false);
         System.out.println("\n\n" + resp);
@@ -43,7 +43,14 @@ public class Client {
             reader.close();
             urlConnection.disconnect();
 
-            return response.toString();
+            JsonObject json = JsonParser.parseString(response.toString()).getAsJsonObject();
+            double temperature = json.getAsJsonObject("main").get("temp").getAsDouble();
+            String description = json.getAsJsonArray("weather").get(0).getAsJsonObject().get("description").getAsString();
+            String cityJson = json.getAsJsonObject().get("name").getAsString();
+
+            String result = "CITY: " + cityJson + "\nTEMP: " + temperature + "°C\nDESC: " + description;
+
+            return result;
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -65,7 +72,14 @@ public class Client {
             reader.close();
             urlConnection.disconnect();
 
-            return response.toString();
+            JsonObject json = JsonParser.parseString(response.toString()).getAsJsonObject();
+            double temperature = json.getAsJsonObject("main").get("temp").getAsDouble();
+            String description = json.getAsJsonArray("weather").get(0).getAsJsonObject().get("description").getAsString();
+            String cityJson = json.getAsJsonObject().get("name").getAsString();
+
+            String result = "CITY: " + cityJson + "\nTEMP: " + temperature + "°C\nDESC: " + description;
+
+            return result;
         } catch (Exception ex) {
             ex.printStackTrace();
         }
