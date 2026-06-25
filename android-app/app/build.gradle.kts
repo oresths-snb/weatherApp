@@ -1,6 +1,11 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
 }
+
+val localProperties = Properties()
+localProperties.load(File(rootDir, "local.properties").inputStream())
 
 android {
     namespace = "gr.uniwa.weatherapp"
@@ -18,6 +23,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "API_KEY", "\"${localProperties["API_KEY"]}\"")
+    }
+
+    buildFeatures{
+        buildConfig = true
     }
 
     buildTypes {

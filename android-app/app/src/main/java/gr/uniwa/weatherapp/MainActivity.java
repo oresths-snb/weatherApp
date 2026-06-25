@@ -1,15 +1,30 @@
 package gr.uniwa.weatherapp;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
+import android.Manifest;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.Calendar;
+
+// vgale to location listener
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     EditText etCity;
     Button btnSrch;
@@ -17,8 +32,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     ProgressBar pbLoad;
     TextView tvCityName;
     TextView tvTemp;
+    TextView tvFeels;
     TextView tvDescr;
+    TextView tvWind;
     TextView tvAlerts;
+    LocationManager LocMan;
+    ImageView ivBackground;
+
+
+    /*
+    //Grant permission for UseLocation()
+    // https://developer.android.com/develop/sensors-and-location/location/permissions/runtime#java
+    private final ActivityResultLauncher<String> locationPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(),
+                    new ActivityResultCallback<Boolean>() {
+                        @Override
+                        public void onActivityResult(Boolean isGranted) {
+                            if (isGranted) {
+                                UseCurrentLocation();
+                            } else {
+                                Toast.makeText(MainActivity.this, "Location permission is required", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+    */
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,8 +68,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         pbLoad = findViewById(R.id.pbLoad);
         tvCityName = findViewById(R.id.tvCityName);
         tvTemp = findViewById(R.id.tvTemp);
+        tvFeels = findViewById(R.id.tvFeels);
         tvDescr = findViewById(R.id.tvDescr);
+        tvWind = findViewById(R.id.tvWind);
         tvAlerts = findViewById(R.id.tvAlerts);
+        LocMan = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        ivBackground = findViewById(R.id.ivBackground);
+		
+		SetBackgroundByTimeOfDay();
 
         btnSrch.setOnClickListener(this);
         btnLoc.setOnClickListener(this);
@@ -46,20 +89,63 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Toast.makeText(this, "Please enter a city name", Toast.LENGTH_SHORT).show();
                 return;
             }
-            SearchByCity(city);
+            new Thread(() -> {
+                SearchByCity(city);
+            }).start();
         }
 
         if (v == btnLoc)
             UseCurrentLocation();
     }
 
-    private void SearchByCity(String city) {
+    private void SearchByCity(final String city) {
         // TODO: call WeatherApiClient + ServerConnection here
         pbLoad.setVisibility(View.VISIBLE);
+        Client client = new Client();
+        weatherData data = client.getWeatherByCity(city,"metric");
+        if (data != null){
+            tvCityName.setText(data.getCity());
+        } else{
+            tvCityName.setText("error!");
+        }
     }
 
     private void UseCurrentLocation() {
-        // TODO: call LocationHelper here
+       /* if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
+            return;
+        }
+
         pbLoad.setVisibility(View.VISIBLE);
+        LocMan.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3000, 2.5f, this); */
     }
+
+    private void SetBackgroundByTimeOfDay() {
+        Calendar calendar = Calendar.getInstance();
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+
+        if (hour >= 6 && hour < 20) {
+            ivBackground.setImageResource(R.drawable.sky_day);
+        } else {
+            ivBackground.setImageResource(R.drawable.sky_night);
+        }
+    }
+
+    /*
+    // For LocationListener based on IDE suggestions + Locations gmele, need to double check/alter
+    @Override
+    public void onLocationChanged(@NonNull Location location) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(@NonNull String provider) {
+        LocationListener.super.onProviderDisabled(provider);
+    }
+
+    @Override
+    public void onProviderEnabled(@NonNull String provider) {
+        LocationListener.super.onProviderEnabled(provider);
+    } */
 }

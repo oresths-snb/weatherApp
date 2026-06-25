@@ -1,39 +1,34 @@
 package gr.uniwa.weatherapp;
 
+import static android.content.ContentValues.TAG;
+
+import android.util.Log;
+
 import java.net.*;
 import java.util.Properties;
-
 import com.google.gson.JsonObject;
-//import com.google.gson.JsonParser;
-
+import com.google.gson.JsonParser;
 import java.io.*;
 
 public class Client {
-    private static String apiKey;
-
+    private static final String apiKey = BuildConfig.API_KEY;
     public Client() {
-        // Load API key
-        Properties properties = new Properties();
-        try (InputStream input = new FileInputStream("config")) {
-            properties.load(input);
-            apiKey = properties.getProperty("api.key");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
     }
 
-    public static void main(String[] args) {
-        Client client = new Client();
-        String resp = client.getWeatherByCity("London", "metric", false);
-        System.out.println(resp);
-        resp = client.getWeatherByCoords("51.5074", "-0.1278", "metric", false);
-        System.out.println("\n\n" + resp);
+    public weatherData getWeatherByCity(String city, String unit) {
+        String apiURI = "https://api.openweathermap.org/data/2.5/weather?q="+city+"&appid="+apiKey+"&units="+unit;
+        Log.d(TAG, "getWeatherByCity: "+apiKey);
+        return fetchAPIData(apiURI);
     }
 
-    public String getWeatherByCity(String city, String unit, Boolean isAlert) {
+    public weatherData getWeatherByCoords(String lat, String lon, String unit) {
+        String apiURI = "https://api.openweathermap.org/data/2.5/weather?lat="+lat+"&lon="+lon+"&appid="+apiKey+"&units="+unit;
+        return fetchAPIData(apiURI);
+    }
+
+    weatherData fetchAPIData(String API_URI){
         try {
-            String apiURI = "https://api.openweathermap.org/data/2.5/weather?q="+city+"&appid="+apiKey+"&units="+unit;
-            URI uri = new URI(apiURI);
+            URI uri = new URI(API_URI);
             HttpURLConnection urlConnection = (HttpURLConnection) uri.toURL().openConnection();
             InputStream inp = urlConnection.getInputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(inp));
@@ -42,33 +37,21 @@ public class Client {
             while ((line = reader.readLine()) != null) {
                 response.append(line);
             }
+            inp.close();
             reader.close();
             urlConnection.disconnect();
 
-            return response.toString();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return null;
-    }
+            JsonObject json = JsonParser.parseString(response.toString()).getAsJsonObject();
+            double temperature = json.getAsJsonObject("main").get("temp").getAsDouble();
+            String description = json.getAsJsonArray("weather").get(0).getAsJsonObject().get("description").getAsString();
+            String cityJson = json.getAsJsonObject().get("name").getAsString();
+            double feelsLike = json.getAsJsonObject("main").get("feels_like").getAsDouble();
+            double windSpeed = json.getAsJsonObject("wind").get("speed").getAsDouble();
 
-    public String getWeatherByCoords(String lat, String lon, String unit, Boolean isAlert) {
-        try {
-            String apiURI = "https://api.openweathermap.org/data/2.5/weather?lat="+lat+"&lon="+lon+"&appid="+apiKey+"&units="+unit;
-            URI uri = new URI(apiURI);
-            HttpURLConnection urlConnection = (HttpURLConnection) uri.toURL().openConnection();
-            InputStream inp = urlConnection.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inp));
-            StringBuilder response = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                response.append(line);
-            }
-            reader.close();
-            urlConnection.disconnect();
+            Log.d(TAG, "fetchAPIData:"+cityJson+description+feelsLike+description+windSpeed);
 
-            return response.toString();
-        } catch (Exception ex) {
+            return new weatherData(cityJson, temperature, description, windSpeed, feelsLike);
+        } catch (Exception ex){
             ex.printStackTrace();
         }
         return null;
