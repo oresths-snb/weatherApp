@@ -14,6 +14,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -38,6 +39,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     TextView tvAlerts;
     LocationManager LocMan;
     ImageView ivBackground;
+
+    weatherData data;
 
 
     /*
@@ -89,8 +92,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Toast.makeText(this, "Please enter a city name", Toast.LENGTH_SHORT).show();
                 return;
             }
+
+            pbLoad.setVisibility(View.VISIBLE);
+
             new Thread(() -> {
                 SearchByCity(city);
+
+                runOnUiThread(() -> {
+                    pbLoad.setVisibility(View.GONE);
+                    if (data != null){
+                        tvCityName.setText("City:\n"+data.getCity());
+                        tvTemp.setText("Temperature:\n"+data.getTemperature());
+                        tvFeels.setText("Feels Like:\n"+data.getFeelsLike());
+                        tvWind.setText("Wind Speed:\n"+data.getWindSpeed());
+                    } else{
+                        Toast.makeText(this, "Please enter a city name", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }).start();
         }
 
@@ -100,14 +118,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void SearchByCity(final String city) {
         // TODO: call WeatherApiClient + ServerConnection here
-        pbLoad.setVisibility(View.VISIBLE);
         Client client = new Client();
-        weatherData data = client.getWeatherByCity(city,"metric");
-        if (data != null){
-            tvCityName.setText(data.getCity());
-        } else{
-            tvCityName.setText("error!");
-        }
+        data = client.getWeatherByCity(city,"metric");
     }
 
     private void UseCurrentLocation() {
