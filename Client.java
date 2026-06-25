@@ -22,13 +22,13 @@ public class Client {
 
     public static void main(String[] args) {
         Client client = new Client();
-        String resp = client.getWeatherByCity("Athens", "metric", false);
-        System.out.println(resp);
+        weatherData resp = client.getWeatherByCity("Athens", "metric", false);
+        System.out.println(resp.getCity() + " " + resp.getTemperature() + "°C " + resp.getDescription());
         resp = client.getWeatherByCoords("51.5074", "-0.1278", "metric", false);
-        System.out.println("\n\n" + resp);
+        System.out.println("\n\n" + resp.getCity() + " " + resp.getTemperature() + "°C " + resp.getDescription());
     }
 
-    public String getWeatherByCity(String city, String unit, Boolean isAlert) {
+    public weatherData getWeatherByCity(String city, String unit, Boolean isAlert) {
         try {
             String apiURI = "https://api.openweathermap.org/data/2.5/weather?q="+city+"&appid="+apiKey+"&units="+unit;
             URI uri = new URI(apiURI);
@@ -48,16 +48,16 @@ public class Client {
             String description = json.getAsJsonArray("weather").get(0).getAsJsonObject().get("description").getAsString();
             String cityJson = json.getAsJsonObject().get("name").getAsString();
 
-            String result = "CITY: " + cityJson + "\nTEMP: " + temperature + "°C\nDESC: " + description;
+            weatherData data = new weatherData(cityJson, temperature, description);
 
-            return result;
+            return data;
         } catch (Exception ex) {
             ex.printStackTrace();
         }
         return null;
     }
 
-    public String getWeatherByCoords(String lat, String lon, String unit, Boolean isAlert) {
+    public weatherData getWeatherByCoords(String lat, String lon, String unit, Boolean isAlert) {
         try {
             String apiURI = "https://api.openweathermap.org/data/2.5/weather?lat="+lat+"&lon="+lon+"&appid="+apiKey+"&units="+unit;
             URI uri = new URI(apiURI);
@@ -77,9 +77,8 @@ public class Client {
             String description = json.getAsJsonArray("weather").get(0).getAsJsonObject().get("description").getAsString();
             String cityJson = json.getAsJsonObject().get("name").getAsString();
 
-            String result = "CITY: " + cityJson + "\nTEMP: " + temperature + "°C\nDESC: " + description;
-
-            return result;
+            weatherData data = new weatherData(cityJson, temperature, description);
+            return data;
         } catch (Exception ex) {
             ex.printStackTrace();
         }
