@@ -7,7 +7,7 @@ import com.google.gson.JsonParser;
 import java.io.*;
 
 public class Client {
- private static String apiKey="33839cf3295f1e6a672de4f285ef72c1"; // ΤΙΓΚΑ λαθος υπό άλλες συνθήκες δεν το κάνουμε ούτε για αστείο.
+ private static String apiKey; // ΤΙΓΚΑ λαθος υπό άλλες συνθήκες δεν το κάνουμε ούτε για αστείο.
 
     public Client() {
         // Load API key
