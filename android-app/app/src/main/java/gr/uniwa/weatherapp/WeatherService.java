@@ -53,6 +53,7 @@ public class WeatherService extends Service {
     public void onCreate () {
         StartInterval();
         super.onCreate();
+        CreateNotificationChannel();
     }
 
     @Override
