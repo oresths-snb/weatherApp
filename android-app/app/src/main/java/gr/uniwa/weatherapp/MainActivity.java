@@ -9,11 +9,14 @@ import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -81,6 +84,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         SetBackgroundByTimeOfDay();
 
+        RequestNotificationPermissionIfNeeded();
+        startService(new Intent(this, WeatherService.class));
+
         btnSrch.setOnClickListener(this);
         btnLoc.setOnClickListener(this);
     }
@@ -117,6 +123,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if (v == btnLoc) {
 
+            // Gia na trexei sto main thread kai oxi sto background, otan patietai to btnLoc zhtaei permission
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+                return;
+            }
+
             pbLoad.setVisibility(View.VISIBLE);
 
             new Thread(() -> {
@@ -140,16 +153,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void SearchByCity(final String city) {
+        SaveLastCityQuery(city); // Gia to WeatherService krataei to teleutaio meros pou epsakses
         Client client = new Client();
         data = client.getWeatherByCity(city,"metric");
     }
 
     private void SearchByLocation() {
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
-            return;
-        }
         /*** Initialized on create
          LocationManager LocMan = (LocationManager) getSystemService (Context.LOCATION_SERVICE); ***/
         Criteria criteria = new Criteria();
@@ -158,14 +168,56 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String provider = LocMan.getBestProvider(criteria,true);
 
         if (provider != null){
+            /*** Auto pou to evgale to IDE gia to LocMan, an exoume xrono to vlepoume
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
+            }
+             ***/
             Location location = LocMan.getLastKnownLocation(provider);
 
             if (location != null){
                 String lat = location.getLatitude() + "";
                 String lon = location.getLongitude() + "";
+                SaveLastLocationQuery(lat, lon); // Gia to WeatherService krataei to teleutaio meros pou hsoun
 
                 Client client = new Client();
                 data = client.getWeatherByCoords(lat,lon,"metric");
+            }
+        }
+    }
+
+
+    /*** https://developer.android.com/training/data-storage/shared-preferences#java ***/
+    private void SaveLastCityQuery(String city) {
+        SharedPreferences prefs = getSharedPreferences("WeatherPrefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("last_city", city);
+        editor.remove("last_lat");
+        editor.remove("last_lon");
+        editor.apply();
+    }
+
+    private void SaveLastLocationQuery(String lat, String lon) {
+        SharedPreferences prefs = getSharedPreferences("WeatherPrefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("last_lat", lat);
+        editor.putString("last_lon", lon);
+        editor.remove("last_city");
+        editor.apply();
+    }
+
+    /*** https://developer.android.com/develop/ui/compose/notifications/notification-permission ***/
+    private void RequestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 2);
             }
         }
     }
