@@ -19,7 +19,7 @@ public class WeatherService extends Service {
 
     private Timer timer = null;
     private TimerTask timerTask = null;
-    //private static final int INTERVAL_MS = 30000; // 30s for test
+    // private static final int INTERVAL_MS = 10000; // 10s for test
     private static final int INTERVAL_MS = 900000; // tosa ms == 15min
     private static final String CHANNEL_ID = "weather_alerts_channel";
     private static final int TOAST_ID = 1;

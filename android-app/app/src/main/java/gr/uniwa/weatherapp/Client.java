@@ -82,6 +82,8 @@ public class Client {
             double temp = data.getTemperature();
             double windSpeed = data.getWindSpeed();
             String description = data.getDescription();
+
+            // gia test vale > 15
             if (temp > 30) {
                 alert.setAlert(true);
                 alert.setHighTemp(true);
