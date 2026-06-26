@@ -1,5 +1,4 @@
 # Weather App 
 
-## AAAA
- ***Mexri twra activity_main.xml, AndroidManifest.xml, MainActivity.java***
+Menei code cleanup kai kapoia minor things
 ---
