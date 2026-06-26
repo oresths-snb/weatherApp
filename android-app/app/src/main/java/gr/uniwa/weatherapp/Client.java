@@ -15,7 +15,18 @@ public class Client {
     public Client() {
     }
 
-    public weatherData getWeatherByCity(String city, String unit) {
+    public weatherData getWeatherByCity(String city, String unit){
+        if (city.contains(" ")){
+            String[] parts = city.split(" ");
+            StringBuilder cityBuilder = new StringBuilder();
+
+            for (String part : parts) {
+                cityBuilder.append(part).append("+");
+            }
+            city = cityBuilder.toString();
+            city = city.substring(0, city.length() - 1);
+        }
+
         String apiURI = "https://api.openweathermap.org/data/2.5/weather?q="+city+"&appid="+apiKey+"&units="+unit;
         Log.d(TAG, "getWeatherByCity: "+apiKey);
         return fetchAPIData(apiURI);
