@@ -69,7 +69,7 @@
         android:id="@+id/tvCityName"
         android:layout_width="95dp"
         android:layout_height="35dp"
-        android:layout_marginTop="18dp"
+        android:layout_marginTop="28dp"
         android:text="CityName"
         android:textColor="@color/purple"
         app:layout_constraintEnd_toEndOf="parent"
@@ -124,17 +124,5 @@
         app:layout_constraintHorizontal_bias="0.113"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvDescr" />
-
-    <TextView
-        android:id="@+id/tvAlerts"
-        android:layout_width="95dp"
-        android:layout_height="35dp"
-        android:layout_marginTop="22dp"
-        android:text="Alert!"
-        android:textColor="@color/purple"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.113"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvWind" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

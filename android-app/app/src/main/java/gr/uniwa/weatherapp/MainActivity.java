@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     TextView tvFeels;
     TextView tvDescr;
     TextView tvWind;
-    TextView tvAlerts;
+    // TextView tvAlerts; instead of this toast
     LocationManager LocMan;
     ImageView ivBackground;
 
@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         tvFeels = findViewById(R.id.tvFeels);
         tvDescr = findViewById(R.id.tvDescr);
         tvWind = findViewById(R.id.tvWind);
-        tvAlerts = findViewById(R.id.tvAlerts);
+        // tvAlerts = findViewById(R.id.tvAlerts); instead of this toasts
         LocMan = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         ivBackground = findViewById(R.id.ivBackground);
 
