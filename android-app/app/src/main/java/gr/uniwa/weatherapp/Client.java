@@ -57,51 +57,50 @@ public class Client {
         return null;
     }
 
-    /*public void getAlerts(String msg){
-        String response = null;
-        try {
-             if (msg.startsWith("CITY:")) {
-                String city = msg.substring(5);
-                response = getWeatherByCity(city, "metric",true);
-            } else if (msg.startsWith("COORDINATES:")){
-                String[] coords = msg.substring(12).split(",");
-                response = getWeatherByCoords(coords[0], coords[1], "metric",true);
-            }
-            if (response != null) {
-                JsonObject json = JsonParser.parseString(response).getAsJsonObject();
-                double temp = json.getAsJsonObject("main").get("temp").getAsDouble();
-                String description = json.getAsJsonArray("weather").get(0).getAsJsonObject().get("description").getAsString();
-                double windSpeed = json.getAsJsonObject("wind").get("speed").getAsDouble();
-
-                if (temp > 30) {
-                    out.println("ALERT: High temperature!");
-                } else if (temp < 10) {
-                    out.println("ALERT: Low temperature!");
-                }
-
-                if (description.toLowerCase().contains("thunderstorm")) {
-                    out.println("ALERT: Thunderstorm!");
-                } else if (description.toLowerCase().contains("rain")) {
-                    out.println("ALERT: Rain!");
-                }
-
-                if (windSpeed > 20) {
-                    out.println("ALERT: High wind speed!");
-                }
-
-                if (temp <= 30 && temp >= 10 && !description.toLowerCase().contains("thunderstorm") && !description.toLowerCase().contains("rain") && windSpeed <= 20)
-                    out.println("No alerts");
-
-                out.println("");
-                out.flush();
-            } else{
-                out.println("No weather data available");
-                out.println("");
-                out.flush();
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
+    public alertData getAlerts(String city,String lon,String lat){
+        alertData alert = new alertData();
+        weatherData data = null;
+        if (city != null && !city.isEmpty()){
+            data = getWeatherByCity(city, "metric");
+        } else if (lon != null && lat != null && !lon.isEmpty() && !lat.isEmpty()){
+            data = getWeatherByCoords(lat, lon, "metric");
+        } else {
+            System.out.println("Error fetching weather data");
         }
-    }*/
+        if (data != null) {
+            double temp = data.getTemperature();
+            double windSpeed = data.getWindSpeed();
+            String description = data.getDescription();
+            if (temp > 30) {
+                alert.setAlert(true);
+                alert.setHighTemp(true);
+            } else if (temp < 10) {
+                alert.setAlert(true);
+                alert.setLowTemp(true);
+            }
+
+            if (windSpeed > 20) {
+                alert.setAlert(true);
+                alert.setHighWind(true);
+            }
+
+            if (description.contains("rain")) {
+                alert.setAlert(true);
+                alert.setRain(true);
+            }
+
+            if (description.contains("snow")) {
+                alert.setAlert(true);
+                alert.setSnow(true);
+            }
+
+            if (description.contains("thunderstorm")) {
+                alert.setAlert(true);
+                alert.setThunderstorm(true);
+            }
+
+        }
+        return alert;
+    }
 
 }

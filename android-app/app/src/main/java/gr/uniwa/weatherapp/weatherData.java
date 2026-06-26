@@ -18,11 +18,8 @@ public class weatherData {
     public String getCity() {
         return city;
     }
-    public double getTemperature() {
-        return temperature;
-    }
-    public String getDescription() {
-        return description;
+    public double getTemperature() { return temperature; }
+    public String getDescription() { return description;
     }
     public double getFeelsLike() { return feelsLike; }
     public double getWindSpeed() { return windSpeed; }

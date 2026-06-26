@@ -78,8 +78,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         tvAlerts = findViewById(R.id.tvAlerts);
         LocMan = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         ivBackground = findViewById(R.id.ivBackground);
-		
-		SetBackgroundByTimeOfDay();
+
+        SetBackgroundByTimeOfDay();
 
         btnSrch.setOnClickListener(this);
         btnLoc.setOnClickListener(this);
@@ -109,6 +109,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     } else{
                         Toast.makeText(this, "Error fetching data!", Toast.LENGTH_SHORT).show();
                     }
+                    data = null;
                 });
             }).start();
         }
@@ -130,6 +131,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } else{
                     Toast.makeText(this, "Error fetching data!", Toast.LENGTH_SHORT).show();
                 }
+                data = null;
             });
         }).start();
 
@@ -162,10 +164,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 Client client = new Client();
                 data = client.getWeatherByCoords(lat,lon,"metric");
-            } else{
-                Toast.makeText(this, "Error fetching data!", Toast.LENGTH_SHORT).show();
             }
-
         }
     }
 
