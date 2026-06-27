@@ -32,23 +32,25 @@ import android.widget.Toast;
 
 import java.util.Calendar; // Βιβλιοθήκη που χρειάζεται για να αλλάζει το ackground αναλόγως της ώρας
 
-
+/*** Το κύριο Activity της εφαρμογής, χειρίζεται την αναζήτηση καιρού (όνομα μέρους
+    ή τρέχουσα τοποθεσία), δείχνει τα αποτελέσματα στην οθόνη, και εκκινεί το
+    WeatherService που τρέχει στο παρασκήνιο ***/
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-    EditText etCity;  // To searchbar για το μέρος
-    Button btnSrch;  // Το κουμπί για την αναήτηση μέρους
-    Button btnLoc;  //
-    ProgressBar pbLoad;
-    TextView tvCityName;
-    TextView tvTemp;
-    TextView tvFeels;
-    TextView tvDescr;
-    TextView tvWind;
-    LocationManager LocMan;
-    ImageView ivBackground;
+    EditText etCity;    // To searchbar για το μέρος
+    Button btnSrch;     // Το κουμπί για την αναήτηση μέρους
+    Button btnLoc;      // Το κουμπί για αποστολή coords
+    ProgressBar pbLoad; // Το progress bar (κύκλος φόρτωσης)
+    TextView tvCityName;    // Πεδίο επίδειξης μέρους
+    TextView tvTemp;    // Πεδίο επίδειξης θερμοκρασασίας
+    TextView tvFeels;   // Πεδίο επίδειξης αίσθησης θερμοκρασασίας
+    TextView tvDescr;   // Πεδίο επίδειξης καιρού
+    TextView tvWind;    // Πεδίο επίδειξης ταχύτητας ανέμου
+    LocationManager LocMan; // Χειριστής για την τοποθεσία
+    ImageView ivBackground; // Εικόνα background
 
     weatherData data;
 
-
+    //  Κλήση μεθόδου για εκκίνηση της εφαρμογής
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnLoc.setOnClickListener(this);
     }
 
+    // Διαχείριση κλικ κουμμπιών btnSrch, btnLoc)
     @Override
     public void onClick(View v) {
         if (v == btnSrch) {
@@ -87,23 +90,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             pbLoad.setVisibility(View.VISIBLE);
 
-            new Thread(() -> {
-                SearchByCity(city);
-
-                runOnUiThread(() -> {
-                    pbLoad.setVisibility(View.GONE);
-                    if (data != null){
-                        tvCityName.setText("City:\n"+data.getCity());
-                        tvTemp.setText("Temperature:\n"+data.getTemperature());
-                        tvFeels.setText("Feels Like:\n"+data.getFeelsLike());
-                        tvDescr.setText("Weather:\n" + data.getDescription());
-                        tvWind.setText("Wind Speed:\n"+data.getWindSpeed());
-                    } else{
-                        Toast.makeText(this, "Error fetching data!", Toast.LENGTH_SHORT).show();
-                    }
-                    data = null;
-                });
-            }).start();
+            CityThread cityThread = new CityThread(this,city);
+            cityThread.start();
         }
 
         if (v == btnLoc) {
@@ -119,34 +107,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             etCity.setText("");
             pbLoad.setVisibility(View.VISIBLE);
 
-            new Thread(() -> {
-                SearchByLocation();
-
-                runOnUiThread(() -> {
-                    pbLoad.setVisibility(View.GONE);
-                    if (data != null) {
-                        tvCityName.setText("City:\n" + data.getCity());
-                        tvTemp.setText("Temperature:\n" + data.getTemperature());
-                        tvFeels.setText("Feels Like:\n" + data.getFeelsLike());
-                        tvDescr.setText("Weather:\n" + data.getDescription());
-                        tvWind.setText("Wind Speed:\n" + data.getWindSpeed());
-                    } else {
-                        Toast.makeText(this, "Error fetching data!", Toast.LENGTH_SHORT).show();
-                    }
-                    data = null;
-                });
-            }).start();
+            LocationThread locThread = new LocationThread(this);
+            locThread.start();
         }
     }
 
-    private void SearchByCity(final String city) {
+
+    // Αναζήτηση με όνομα μέρους
+    void SearchByCity(final String city) {
         // Για το WeatherService κρατάει το τελευταίο μέρος που έψαξες
         SaveLastCityQuery(city);
         Client client = new Client();
         data = client.getWeatherByCity(city,"metric");
     }
 
-    private void SearchByLocation() {
+    // Αναζήτηση με όνομα με τοποθεσία (συντεταγμενες)
+    void SearchByLocation() {
 
         Criteria criteria = new Criteria();
         criteria.setAccuracy(Criteria.ACCURACY_FINE);
@@ -170,7 +146,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-    // Μέθοδος
+    // Μέθοδος για την CheckWeatherAlerts, περνάει το τελευταίο εισαχθέο μέρος
     private void SaveLastCityQuery(String city) {
         // Μέθοδος του context για nα δημιουργεί ένα αρχείο
         SharedPreferences prefs = getSharedPreferences("WeatherPrefs", MODE_PRIVATE);
@@ -185,6 +161,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         editor.apply();
     }
 
+    // Μέθοδοςγια την CheckWeatherAlerts, περνάει την τελευταία τοποθεσία
     private void SaveLastLocationQuery(String lat, String lon) {
         SharedPreferences prefs = getSharedPreferences("WeatherPrefs", MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
@@ -194,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         editor.apply();
     }
 
-    //
+    // Μέθοδος που ζητάει από τον χρήστη άδεια για ειδοποιήσεις
     private void RequestNotificationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -209,10 +186,68 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Calendar calendar = Calendar.getInstance();
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
 
-        if (hour >= 6 && hour < 20) {
+        if (hour >= 6 && hour < 21) {
             ivBackground.setImageResource(R.drawable.sky_day);
         } else {
             ivBackground.setImageResource(R.drawable.sky_night);
         }
+    }
+}
+
+// Thread που εκτελεί την μέθοδο λήψης δεδομένων βάση της πόλης και ενημερώνει τα πλαίσια της οθόνης με τα δεδομένα
+class CityThread extends Thread{
+    MainActivity mA;
+    String city;
+
+    CityThread(MainActivity mA, String city){
+        this.mA = mA;
+        this.city = city;
+    }
+
+    public void run(){
+        mA.SearchByCity(city);
+
+        // Εκτελεί την ενημέρωση πίσω στο main thread, καθώς ένα background thread δεν μπορεί να επηρεάσει τα πλαίσια
+        mA.runOnUiThread(() -> {
+            mA.pbLoad.setVisibility(View.GONE);
+            if (mA.data != null) {
+                mA.tvCityName.setText("City:\n" + mA.data.getCity());
+                mA.tvTemp.setText("Temperature:\n" + mA.data.getTemperature());
+                mA.tvFeels.setText("Feels Like:\n" + mA.data.getFeelsLike());
+                mA.tvDescr.setText("Weather:\n" + mA.data.getDescription());
+                mA.tvWind.setText("Wind Speed:\n" + mA.data.getWindSpeed());
+            } else {
+                Toast.makeText(mA, "Error fetching data!", Toast.LENGTH_SHORT).show();
+            }
+            mA.data = null;
+        });
+    }
+}
+
+class LocationThread extends Thread{
+    MainActivity mA;
+
+    LocationThread(MainActivity mA){
+        this.mA = mA;
+    }
+
+    @Override
+    public void run(){
+        mA.SearchByLocation();
+
+        // Εκτελεί την ενημέρωση πίσω στο main thread, καθώς ένα background thread δεν μπορεί να επηρεάσει τα πλαίσια
+        mA.runOnUiThread(() -> {
+            mA.pbLoad.setVisibility(View.GONE);
+            if (mA.data != null) {
+                mA.tvCityName.setText("City:\n" + mA.data.getCity());
+                mA.tvTemp.setText("Temperature:\n" + mA.data.getTemperature());
+                mA.tvFeels.setText("Feels Like:\n" + mA.data.getFeelsLike());
+                mA.tvDescr.setText("Weather:\n" + mA.data.getDescription());
+                mA.tvWind.setText("Wind Speed:\n" + mA.data.getWindSpeed());
+            } else {
+                Toast.makeText(mA, "Error fetching data!", Toast.LENGTH_SHORT).show();
+            }
+            mA.data = null;
+        });
     }
 }

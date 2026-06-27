@@ -24,10 +24,10 @@ public class WeatherService extends Service {
     private TimerTask timerTask = null;
     // private static final int INTERVAL_MS = 10000; // 10s για test
     private static final int INTERVAL_MS = 900000; // Τόσα ms == 15min
-    private static final String CHANNEL_ID = "weather_alerts_channel";  //
+    private static final String CHANNEL_ID = "weather_alerts_channel";  // ID για το κανάλι alerts
     private static final int TOAST_ID = 1;
     private static final int FOREGROUND_NOTIFICATION_ID = 42;
-    private static final String STATUS_CHANNEL_ID = "weather_status_channel";
+    private static final String STATUS_CHANNEL_ID = "weather_status_channel"; // ID για το κανάλι persistent notifications
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -48,35 +48,38 @@ public class WeatherService extends Service {
         timer.schedule(timerTask, 0, INTERVAL_MS);
     }
 
-    // Σταματάει τον έλεγχο και επαναστέφει το timer σε null
+    // Σταματάει τον έλεγχο και επαναφέρει το timer σε null
     public void StopInterval() {
         if (timer != null) {
-            timer.cancel();
-            timer.purge();
-            timer = null;
+            timer.cancel(); // Σταματάει
+            timer.purge();  // Καθαρίζει τον timerTask
+            timer = null;  // Επαναφορά τιμής
         }
     }
 
     @Override
     public void onCreate () {
         super.onCreate();
-        CreateNotificationChannel();
-        StartForegroundNotification();
-        StartInterval();
+        CreateNotificationChannel();    // Δημιουργεί τα κανάλια
+        StartForegroundNotification();  // Εκκινεί να τρέχει στο παρασκήνιο το service
+        StartInterval();    // Εκκινεί την μέθοδο περιόδου 15 λεπτών
     }
 
     @Override
-    public int onStartCommand(Intent intent,int flags, int startID) {
+    public int onStartCommand(Intent intent, int flags, int startID) {
         return START_STICKY; // Για να ξανακάνει restart service όταν γίνει kill service
     }
 
+    // Κλείσιμο κύκλου ζωής του service
     @Override
     public void onDestroy() {
         super.onDestroy();
         StopInterval();
     }
 
+    // Έλεγχος ακραίων καιρικών συνθηκών
     private void CheckWeatherAlerts() {
+        // Παίρνει πρόσβαση στο αρχείο WeatherPrefs (βλπ Save μεθόδους στο MainActivity)
         SharedPreferences prefs = getSharedPreferences("WeatherPrefs", MODE_PRIVATE);
         // Παίρνει τις αποθηκευμένες τιμές από το αρχείο, αλλιώς null αν δεν υπάρχουν
         String lastCity = prefs.getString("last_city", null);
@@ -97,6 +100,7 @@ public class WeatherService extends Service {
             ShowToast(alert);
     }
 
+    // Βγάζει ειδοποίηση αναλόγως του ακραίου καιρικού φαινομένου
     private void ShowToast(alertData alert) {
         // Καλύτερο από concat, μόνο 1 object
         StringBuilder message = new StringBuilder();
@@ -107,48 +111,60 @@ public class WeatherService extends Service {
         if (alert.getSnow()) message.append("Snow!\n");
         if (alert.getThunderstorm()) message.append("Thunderstorm!\n");
 
-        /*** Όταν ο χρήστης πατάει το otification ανοίγει το MainActivity
-             Το Intent blah blah ***/
+        // Ορισμός για το ποίο activity θα ανοίξει το intent
         Intent contentIntent = new Intent(this, MainActivity.class);
-        // To Intent θα περιμένει να εκτελεστεί μέχρι να το πατήσει ο χρήστης
+        // To Intent ενθυλακώνεται από το PendingIntent θα περιμένει να εκτελεστεί μέχρι να το πατήσει ο χρήστης
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 this, 0, contentIntent, PendingIntent.FLAG_IMMUTABLE);
 
+        // Χτίσιμο του notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
                 .setContentTitle("Weather Alert")
                 .setContentText(message.toString().trim())
-                // Δυνατότητα expand
+                // Δυνατότητα expand του notification αν είναι πάνω από μία γραμμή
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(message.toString().trim()))
+                // Στον χρήστη έρχεται ειδοποίηση, δονείται το κινητό και βγάζει και ήχο
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
+                // Όταν πατήσει το notification ο χρήστης, ανοίγει το MainActivity
                 .setContentIntent(pendingIntent)
+                // Όταν πατήσει το notification ο χρήστης, κάνει dismiss
                 .setAutoCancel(true);
 
+        // Ζητάει από το σύστημα την υπηρεσία διαχείρισης ειδοποιήσεων
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        // Μετατροπή ρυθμίσεων builder σε notification object και εμφάνιση ειδοποίησης στον χρήστη
         notificationManager.notify(TOAST_ID, builder.build());
     }
 
     /*** https://developer.android.com/develop/ui/compose/notifications/channels ***/
+    // Δημιουργία καναλιού για τις ειδοποιήσεις
     private void CreateNotificationChannel() {
+        // Για Android από Οreo (ΑΡΙ 26) και μετά
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Κανάλι για τα alerts
             NotificationChannel alertChannel = new NotificationChannel(
                     CHANNEL_ID,
                     "Weather Alerts",
                     NotificationManager.IMPORTANCE_HIGH);
             alertChannel.setDescription("Notifications for severe weather conditions");
 
+            // Κανάλι για τα service
             NotificationChannel statusChannel = new NotificationChannel(
                     STATUS_CHANNEL_ID, "Service Status", NotificationManager.IMPORTANCE_LOW);
             statusChannel.setDescription("Indicates the weather monitoring service is active");
 
             NotificationManager manager = getSystemService(NotificationManager.class);
+            // Καταχώριση καναλιών στο σύστημα
             manager.createNotificationChannel(alertChannel);
             manager.createNotificationChannel(statusChannel);
         }
     }
 
     /*** https://developer.android.com/develop/background-work/services/fgs/launch ***/
+    // Δημιουργία notification ενημέρωσης ότι το service ρέχει στο παρασκήνιο
     private void StartForegroundNotification() {
+        // Δημιουργία notification αντικειμένου
         Notification notification = new NotificationCompat.Builder(this, STATUS_CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
                 .setContentTitle("Weather Alerts Active")
@@ -156,6 +172,7 @@ public class WeatherService extends Service {
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .build();
 
+        // Διαφορετικό ID για αυτό το notification
         startForeground(FOREGROUND_NOTIFICATION_ID, notification);
     }
 
