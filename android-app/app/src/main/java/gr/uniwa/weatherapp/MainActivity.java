@@ -8,12 +8,9 @@
 
 package gr.uniwa.weatherapp;
 
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.content.Context;
@@ -22,11 +19,9 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -35,42 +30,24 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.Calendar;
+import java.util.Calendar; // Βιβλιοθήκη που χρειάζεται για να αλλάζει το ackground αναλόγως της ώρας
 
-// vgale to location listener
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-    EditText etCity;
-    Button btnSrch;
-    Button btnLoc;
+    EditText etCity;  // To searchbar για το μέρος
+    Button btnSrch;  // Το κουμπί για την αναήτηση μέρους
+    Button btnLoc;  //
     ProgressBar pbLoad;
     TextView tvCityName;
     TextView tvTemp;
     TextView tvFeels;
     TextView tvDescr;
     TextView tvWind;
-    // TextView tvAlerts; instead of this toast
     LocationManager LocMan;
     ImageView ivBackground;
 
     weatherData data;
 
-
-    /*
-    //Grant permission for UseLocation()
-    // https://developer.android.com/develop/sensors-and-location/location/permissions/runtime#java
-    private final ActivityResultLauncher<String> locationPermissionLauncher =
-            registerForActivityResult(new ActivityResultContracts.RequestPermission(),
-                    new ActivityResultCallback<Boolean>() {
-                        @Override
-                        public void onActivityResult(Boolean isGranted) {
-                            if (isGranted) {
-                                UseCurrentLocation();
-                            } else {
-                                Toast.makeText(MainActivity.this, "Location permission is required", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    });
-    */
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,14 +63,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         tvFeels = findViewById(R.id.tvFeels);
         tvDescr = findViewById(R.id.tvDescr);
         tvWind = findViewById(R.id.tvWind);
-        // tvAlerts = findViewById(R.id.tvAlerts); instead of this toasts
         LocMan = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         ivBackground = findViewById(R.id.ivBackground);
 
         SetBackgroundByTimeOfDay();
 
         RequestNotificationPermissionIfNeeded();
-        startService(new Intent(this, WeatherService.class));
+        // κλήση για να ξεκινήσει το WeatherService
+        ContextCompat.startForegroundService(this, new Intent(this, WeatherService.class));
 
         btnSrch.setOnClickListener(this);
         btnLoc.setOnClickListener(this);
@@ -131,13 +108,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if (v == btnLoc) {
 
-            // Gia na trexei sto main thread kai oxi sto background, otan patietai to btnLoc zhtaei permission
+            // Oταν πατιέται το btnLoc ζητάει permission
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                     != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
                 return;
             }
 
+            // Όταν έχει ήδη αναζητηθεί κάποιο μέρος και πατηθεί να στείλεις location το search bar κάνει clear
+            etCity.setText("");
             pbLoad.setVisibility(View.VISIBLE);
 
             new Thread(() -> {
@@ -161,39 +140,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void SearchByCity(final String city) {
-        SaveLastCityQuery(city); // Gia to WeatherService krataei to teleutaio meros pou epsakses
+        // Για το WeatherService κρατάει το τελευταίο μέρος που έψαξες
+        SaveLastCityQuery(city);
         Client client = new Client();
         data = client.getWeatherByCity(city,"metric");
     }
 
     private void SearchByLocation() {
 
-        /*** Initialized on create
-         LocationManager LocMan = (LocationManager) getSystemService (Context.LOCATION_SERVICE); ***/
         Criteria criteria = new Criteria();
         criteria.setAccuracy(Criteria.ACCURACY_FINE);
 
         String provider = LocMan.getBestProvider(criteria,true);
 
         if (provider != null){
-            /*** Auto pou to evgale to IDE gia to LocMan, an exoume xrono to vlepoume
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return;
-            }
-             ***/
+
             Location location = LocMan.getLastKnownLocation(provider);
 
             if (location != null){
                 String lat = location.getLatitude() + "";
                 String lon = location.getLongitude() + "";
-                SaveLastLocationQuery(lat, lon); // Gia to WeatherService krataei to teleutaio meros pou hsoun
+                // Για το WeatherService κρατάει το τελευταίο μέρος που ήσουν
+                SaveLastLocationQuery(lat, lon);
 
                 Client client = new Client();
                 data = client.getWeatherByCoords(lat,lon,"metric");
@@ -202,13 +170,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-    /*** https://developer.android.com/training/data-storage/shared-preferences#java ***/
+    // Μέθοδος
     private void SaveLastCityQuery(String city) {
+        // Μέθοδος του context για nα δημιουργεί ένα αρχείο
         SharedPreferences prefs = getSharedPreferences("WeatherPrefs", MODE_PRIVATE);
+        // Κλάση του SharedPreferences, δημιουργούμε το αντικείμενο object για χειρισμό του αρχείου
         SharedPreferences.Editor editor = prefs.edit();
+        // Βάζει την τιμή που αναζητήηκε στο κλειδί "last_city" (είναι ζεύγος)
         editor.putString("last_city", city);
+        // Σβήνει τα coords
         editor.remove("last_lat");
         editor.remove("last_lon");
+        // Αποθηκεύει τις αλλαγές στο αρχείο
         editor.apply();
     }
 
@@ -221,7 +194,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         editor.apply();
     }
 
-    /*** https://developer.android.com/develop/ui/compose/notifications/notification-permission ***/
+    //
     private void RequestNotificationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -230,6 +203,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+
+    // Ανάλογα με την ώρα του κινητού αλλάζει background εικόνα
     private void SetBackgroundByTimeOfDay() {
         Calendar calendar = Calendar.getInstance();
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
@@ -240,21 +215,4 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             ivBackground.setImageResource(R.drawable.sky_night);
         }
     }
-
-    /*
-    // For LocationListener based on IDE suggestions + Locations gmele, need to double check/alter
-    @Override
-    public void onLocationChanged(@NonNull Location location) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(@NonNull String provider) {
-        LocationListener.super.onProviderDisabled(provider);
-    }
-
-    @Override
-    public void onProviderEnabled(@NonNull String provider) {
-        LocationListener.super.onProviderEnabled(provider);
-    } */
 }
