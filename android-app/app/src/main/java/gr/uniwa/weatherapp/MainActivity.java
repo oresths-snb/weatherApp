@@ -30,7 +30,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.Calendar; // Βιβλιοθήκη που χρειάζεται για να αλλάζει το ackground αναλόγως της ώρας
+import java.util.Calendar; // Βιβλιοθήκη που χρειάζεται για να αλλάζει το background αναλόγως της ώρας
 
 /*** Το κύριο Activity της εφαρμογής, χειρίζεται την αναζήτηση καιρού (όνομα μέρους
     ή τρέχουσα τοποθεσία), δείχνει τα αποτελέσματα στην οθόνη, και εκκινεί το
@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     weatherData data;
 
-    //  Κλήση μεθόδου για εκκίνηση της εφαρμογής
+    //  Κλήση μεθόδου για δημιουργία του Activity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         data = client.getWeatherByCity(city,"metric");
     }
 
-    // Αναζήτηση με όνομα με τοποθεσία (συντεταγμενες)
+    // Αναζήτηση με τοποθεσία
     void SearchByLocation() {
 
         Criteria criteria = new Criteria();

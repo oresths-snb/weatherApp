@@ -25,8 +25,8 @@ public class WeatherService extends Service {
     // private static final int INTERVAL_MS = 10000; // 10s για test
     private static final int INTERVAL_MS = 900000; // Τόσα ms == 15min
     private static final String CHANNEL_ID = "weather_alerts_channel";  // ID για το κανάλι alerts
-    private static final int TOAST_ID = 1;
-    private static final int FOREGROUND_NOTIFICATION_ID = 42;
+    private static final int TOAST_ID = 1;  // ID για το notification των weather alerts
+    private static final int FOREGROUND_NOTIFICATION_ID = 42;   // ID για τo persistent notification
     private static final String STATUS_CHANNEL_ID = "weather_status_channel"; // ID για το κανάλι persistent notifications
 
     @Override
@@ -111,9 +111,9 @@ public class WeatherService extends Service {
         if (alert.getSnow()) message.append("Snow!\n");
         if (alert.getThunderstorm()) message.append("Thunderstorm!\n");
 
-        // Ορισμός για το ποίο activity θα ανοίξει το intent
+        // Ορίζει ποίο activity θα ανοίξει το intent
         Intent contentIntent = new Intent(this, MainActivity.class);
-        // To Intent ενθυλακώνεται από το PendingIntent θα περιμένει να εκτελεστεί μέχρι να το πατήσει ο χρήστης
+        // Το Intent ενθυλακώνεται στο PendingIntent και εκτελείται όταν ο χρήστης πατήσει το notification
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 this, 0, contentIntent, PendingIntent.FLAG_IMMUTABLE);
 
@@ -149,7 +149,7 @@ public class WeatherService extends Service {
                     NotificationManager.IMPORTANCE_HIGH);
             alertChannel.setDescription("Notifications for severe weather conditions");
 
-            // Κανάλι για τα service
+            // Κανάλι για το service
             NotificationChannel statusChannel = new NotificationChannel(
                     STATUS_CHANNEL_ID, "Service Status", NotificationManager.IMPORTANCE_LOW);
             statusChannel.setDescription("Indicates the weather monitoring service is active");
