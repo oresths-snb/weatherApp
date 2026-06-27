@@ -1,11 +1,6 @@
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.android.application)
 }
-
-val localProperties = Properties()
-localProperties.load(File(rootDir, "local.properties").inputStream())
 
 android {
     namespace = "gr.uniwa.weatherapp"
@@ -23,12 +18,6 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        buildConfigField("String", "API_KEY", "\"${localProperties["API_KEY"]}\"")
-    }
-
-    buildFeatures{
-        buildConfig = true
     }
 
     buildTypes {
@@ -54,6 +43,6 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-    implementation(libs.gson)
-    implementation("com.google.android.gms:play-services:7.0.0")
+    implementation(libs.gson) // προσθήκη dependency για κλάση json parser που εξάγει τα δεδομένα απο την απάντηση της κλήσης του API
+    implementation("com.google.android.gms:play-services:7.0.0") // προσθήκη dependency για λήψη συντεταγμένων απο το GPS του κινητού
 }

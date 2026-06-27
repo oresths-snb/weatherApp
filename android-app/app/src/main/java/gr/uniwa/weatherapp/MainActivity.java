@@ -1,3 +1,11 @@
+/*
+
+    ΜΕΛΗ ΟΜΆΔΑΣ:
+    ΟΡΕΣΤΗΣ ΚΟΥΤΣΙΑΣ (ΑΜ: 21390106)
+    ΝΕΒΕΝΑ ΑΝΔΡΙΤΣΟΥ (ΑΜ : 19390016)
+
+ */
+
 package gr.uniwa.weatherapp;
 
 import androidx.activity.result.ActivityResultCallback;
